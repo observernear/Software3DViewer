@@ -3,14 +3,16 @@ package com.cgvsu.controller;
 import com.cgvsu.manager.SceneManager;
 import com.cgvsu.manager.UIManager;
 import com.cgvsu.model.Model;
-import com.cgvsu.render_engine.Transform;
+import com.cgvsu.render_engine.transform.Transform;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Spinner;
 import javafx.scene.layout.VBox;
 
 public class TransformController {
+
     @FXML private VBox transformPanel;
     @FXML private Spinner<Double> translateXField, translateYField, translateZField;
     @FXML private Spinner<Double> rotateXField, rotateYField, rotateZField;
@@ -18,18 +20,24 @@ public class TransformController {
     @FXML private Button resetButton;
 
     private final SceneManager sceneManager;
-    private UIManager uiManager;
+    private final UIManager uiManager;
+    private final ChangeListener<Transform> transformListener;
 
     public TransformController(SceneManager sceneManager, UIManager uiManager) {
         this.sceneManager = sceneManager;
         this.uiManager = uiManager;
+
+        // слушатель обновления спиннеров при изменении модели
+        transformListener = (obs, oldTransform, newTransform) -> {
+            if (!uiManager.isUpdatingFromModel()) updateSpinnersFromTransform(newTransform);
+        };
     }
 
     @FXML
     private void initialize() {
-        setupUI();
-        setupListeners();
-        hidePanel();
+        setupUI();        // инициализация спиннеров
+        setupListeners(); // слушатели спиннеров и активной модели
+        hidePanel();      // по умолчанию скрыта
     }
 
     private void setupUI() {
@@ -41,46 +49,32 @@ public class TransformController {
     }
 
     private void setupListeners() {
-        // слушатели спиннеров
-        setupSpinnerListener(translateXField);
-        setupSpinnerListener(translateYField);
-        setupSpinnerListener(translateZField);
-        setupSpinnerListener(rotateXField);
-        setupSpinnerListener(rotateYField);
-        setupSpinnerListener(rotateZField);
-        setupSpinnerListener(scaleXField);
-        setupSpinnerListener(scaleYField);
-        setupSpinnerListener(scaleZField);
+        // слушатели изменения значений спиннеров
+        Spinner<Double>[] spinners = new Spinner[]{
+                translateXField, translateYField, translateZField,
+                rotateXField, rotateYField, rotateZField,
+                scaleXField, scaleYField, scaleZField
+        };
+        for (Spinner<Double> spinner : spinners) setupSpinnerListener(spinner);
 
         // слушаем смену активной модели
         sceneManager.activeModelProperty().addListener((obs, oldModel, newModel) -> {
-            if (oldModel != null) {
-                oldModel.transformProperty().removeListener(transformListener);
-            }
+            if (oldModel != null) oldModel.transformProperty().removeListener(transformListener);
             if (newModel != null) {
                 newModel.transformProperty().addListener(transformListener);
                 updateSpinnersFromTransform(newModel.getTransform());
                 setSpinnersEditable(true);
-            } else {
-                setSpinnersEditable(false); // если модели нет — спиннеры заблокированы
-            }
+            } else setSpinnersEditable(false);
         });
 
+        // начальная настройка спиннеров для текущей модели
         Model activeModel = sceneManager.getActiveModel();
         if (activeModel != null) {
             activeModel.transformProperty().addListener(transformListener);
             updateSpinnersFromTransform(activeModel.getTransform());
             setSpinnersEditable(true);
-        } else {
-            setSpinnersEditable(false);
-        }
+        } else setSpinnersEditable(false);
     }
-
-    private final ChangeListener<Transform> transformListener = (obs, oldTransform, newTransform) -> {
-        if (!uiManager.isUpdatingFromModel()) {
-            updateSpinnersFromTransform(newTransform);
-        }
-    };
 
     private void setupSpinnerListener(Spinner<Double> spinner) {
         spinner.valueProperty().addListener((obs, oldVal, newVal) -> handleTransformChange());
@@ -99,14 +93,13 @@ public class TransformController {
         if (uiManager.isUpdatingFromModel()) return;
 
         Model activeModel = sceneManager.getActiveModel();
-        if (activeModel == null) return; // если модели нет — ничего не делаем
+        if (activeModel == null) return;
 
         Transform transform = uiManager.createTransformFromSpinners(
                 translateXField, translateYField, translateZField,
                 rotateXField, rotateYField, rotateZField,
                 scaleXField, scaleYField, scaleZField
         );
-
         activeModel.setTransform(transform);
     }
 
@@ -119,24 +112,21 @@ public class TransformController {
         );
     }
 
-    // метод блокировки/разблокировки спиннеров
     private void setSpinnersEditable(boolean editable) {
-        translateXField.setDisable(!editable);
-        translateYField.setDisable(!editable);
-        translateZField.setDisable(!editable);
-        rotateXField.setDisable(!editable);
-        rotateYField.setDisable(!editable);
-        rotateZField.setDisable(!editable);
-        scaleXField.setDisable(!editable);
-        scaleYField.setDisable(!editable);
-        scaleZField.setDisable(!editable);
+        Spinner<Double>[] spinners = new Spinner[]{
+                translateXField, translateYField, translateZField,
+                rotateXField, rotateYField, rotateZField,
+                scaleXField, scaleYField, scaleZField
+        };
+        for (Spinner<Double> spinner : spinners) spinner.setDisable(!editable);
         resetButton.setDisable(!editable);
     }
+
+    // ------------------ Панель ------------------
 
     public void showPanel() {
         transformPanel.setVisible(true);
         transformPanel.setManaged(true);
-        // спиннеры будут заблокированы, если модели нет
     }
 
     public void hidePanel() {
@@ -144,7 +134,8 @@ public class TransformController {
         transformPanel.setManaged(false);
     }
 
-    public VBox getPanel() {
+    /** Корневой узел для ToolController */
+    public Node getRoot() {
         return transformPanel;
     }
 }

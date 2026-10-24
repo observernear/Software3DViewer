@@ -75,9 +75,7 @@ public class GraphicConveyor {
 
         Matrix4f rotationMatrix = rotateZMatrix.multiply(rotateYMatrix).multiply(rotateXMatrix);
 
-        Matrix4f modelMatrix = translateMatrix.multiply(rotationMatrix).multiply(scaleMatrix);
-
-        return modelMatrix;
+        return translateMatrix.multiply(rotationMatrix).multiply(scaleMatrix);
     }
 
     public static Matrix4f lookAt(Vector3f eye, Vector3f target) {
@@ -91,7 +89,7 @@ public class GraphicConveyor {
             direction = new Vector3f(0, 0, -1);
         }
 
-        Vector3f z = direction.normalize();
+        Vector3f z = eye.subtract(target).normalize();
         Vector3f x = up.cross(z).normalize();
         Vector3f y = z.cross(x).normalize();
 
@@ -131,20 +129,58 @@ public class GraphicConveyor {
 
     public static Vector3f multiplyMatrix4ByVector3(Matrix4f m, Vector3f v) {
         Vector4f v4 = m.multiply(new Vector4f(v.getX(), v.getY(), v.getZ(), 1.0f));
-        float w = v4.getW();
 
+        float w = v4.getW();
         if (Math.abs(w) < 1e-6f) {
             return new Vector3f(v4.getX(), v4.getY(), v4.getZ());
         }
 
-        return new Vector3f(v4.getX()/w, v4.getY()/w, v4.getZ()/w);
+        return new Vector3f(
+                v4.getX() / w,
+                v4.getY() / w,
+                v4.getZ() / w
+        );
     }
+
+    public static Vector4f multiplyMatrix4ByVector4(Matrix4f m, Vector4f v) {
+
+        float x =
+                m.get(0, 0) * v.getX() +
+                        m.get(0, 1) * v.getY() +
+                        m.get(0, 2) * v.getZ() +
+                        m.get(0, 3) * v.getW();
+
+        float y =
+                m.get(1, 0) * v.getX() +
+                        m.get(1, 1) * v.getY() +
+                        m.get(1, 2) * v.getZ() +
+                        m.get(1, 3) * v.getW();
+
+        float z =
+                m.get(2, 0) * v.getX() +
+                        m.get(2, 1) * v.getY() +
+                        m.get(2, 2) * v.getZ() +
+                        m.get(2, 3) * v.getW();
+
+        float w =
+                m.get(3, 0) * v.getX() +
+                        m.get(3, 1) * v.getY() +
+                        m.get(3, 2) * v.getZ() +
+                        m.get(3, 3) * v.getW();
+
+        return new Vector4f(x, y, z, w);
+    }
+
+
 
     public static Point2f vertexToPoint(Vector3f v, int width, int height) {
         float x_ndc = v.getX();
         float y_ndc = v.getY();
+
         float x_screen = (x_ndc + 1.0f) * 0.5f * width;
-        float y_screen = (y_ndc + 1.0f) * 0.5f * height;
+        float y_screen = (1.0f - (y_ndc + 1.0f) * 0.5f) * height;
+
         return new Point2f(x_screen, y_screen);
     }
+
 }

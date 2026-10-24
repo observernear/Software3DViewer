@@ -4,11 +4,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Класс Polygon представляет один полигон модели.
+ * Полигон хранит индексы вершин, текстурных координат и нормалей.
+ * Используется паттерн Builder для удобного и безопасного создания экземпляров.
+ */
 public class Polygon {
+
+    // Индексы вершин (immutable список)
     private final List<Integer> vertexIndices;
+
+    // Индексы вершин текстур (immutable список)
     private final List<Integer> textureVertexIndices;
+
+    // Индексы нормалей (immutable список)
     private final List<Integer> normalIndices;
 
+    /**
+     * Приватный конструктор — экземпляры создаются только через Builder
+     */
     private Polygon(List<Integer> vertexIndices, List<Integer> textureVertexIndices, List<Integer> normalIndices) {
         this.vertexIndices = vertexIndices != null ?
                 Collections.unmodifiableList(new ArrayList<>(vertexIndices)) : Collections.emptyList();
@@ -18,6 +32,9 @@ public class Polygon {
                 Collections.unmodifiableList(new ArrayList<>(normalIndices)) : Collections.emptyList();
     }
 
+    /**
+     * Builder для удобного создания полигонов
+     */
     public static class Builder {
         private List<Integer> vertexIndices = new ArrayList<>();
         private List<Integer> textureVertexIndices = new ArrayList<>();
@@ -58,6 +75,8 @@ public class Polygon {
         }
     }
 
+    // ------------------- Геттеры -------------------
+
     public List<Integer> getVertexIndices() {
         return vertexIndices;
     }
@@ -70,15 +89,19 @@ public class Polygon {
         return normalIndices;
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
+    // ------------------- Удобные методы -------------------
 
+    /** Создаёт новый Builder с копией текущего полигона */
     public Builder toBuilder() {
         return new Builder()
                 .setVertexIndices(vertexIndices)
                 .setTextureVertexIndices(textureVertexIndices)
                 .setNormalIndices(normalIndices);
+    }
+
+    /** Статический метод для начала построения нового полигона */
+    public static Builder builder() {
+        return new Builder();
     }
 
     @Override

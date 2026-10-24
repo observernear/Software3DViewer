@@ -15,6 +15,7 @@ public class AlertDialogController {
 
     private String result = null;
 
+    // Показ/скрытие кнопок
     public void editButtons(boolean visible) {
         btnOriginal.setVisible(visible);
         btnTransformed.setVisible(visible);
@@ -33,24 +34,22 @@ public class AlertDialogController {
         return result;
     }
 
-    @FXML
-    private void onOriginalClick() {
+    @FXML private void onOriginalClick() {
         result = "Исходная";
         closeWindow();
     }
 
-    @FXML
-    private void onTransformedClick() {
+    @FXML private void onTransformedClick() {
         result = "Преобразованная";
         closeWindow();
     }
 
-    @FXML
-    private void onCancelClick() {
+    @FXML private void onCancelClick() {
         result = null;
         closeWindow();
     }
 
+    // Закрытие окна
     private void closeWindow() {
         Stage stage = (Stage) headerLabel.getScene().getWindow();
         stage.close();

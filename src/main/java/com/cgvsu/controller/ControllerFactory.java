@@ -3,8 +3,11 @@ package com.cgvsu.controller;
 import com.cgvsu.manager.*;
 import com.cgvsu.manager.interfaces.InputManagerImpl;
 import com.cgvsu.manager.interfaces.FileManagerImpl;
+import javafx.util.Callback;
 
-public class ControllerFactory implements javafx.util.Callback<Class<?>, Object> {
+// Фабрика контроллеров для FXMLLoader
+public class ControllerFactory implements Callback<Class<?>, Object> {
+
     private final SceneManager sceneManager;
     private final AnimationManager animationManager;
     private final UIManager uiManager;
@@ -14,12 +17,12 @@ public class ControllerFactory implements javafx.util.Callback<Class<?>, Object>
 
     public ControllerFactory(SceneManager sceneManager, AnimationManager animationManager,
                              UIManager uiManager, FileManagerImpl modelManager,
-                             InputManagerImpl inputSystem, MainController mainController) {
+                             InputManagerImpl inputManager, MainController mainController) {
         this.sceneManager = sceneManager;
         this.animationManager = animationManager;
         this.uiManager = uiManager;
         this.modelManager = modelManager;
-        this.inputManager = inputSystem;
+        this.inputManager = inputManager;
         this.mainController = mainController;
     }
 
@@ -27,11 +30,15 @@ public class ControllerFactory implements javafx.util.Callback<Class<?>, Object>
     public Object call(Class<?> type) {
         if (type == ViewportController.class) {
             return new ViewportController(sceneManager, animationManager, inputManager, mainController);
-        } else if (type == ToolController.class) {
-            return new ToolController(sceneManager, uiManager);
-        } else if (type == MenuController.class) {
+        }
+        if (type == ToolController.class) {
+            return new ToolController(sceneManager, uiManager, mainController);
+        }
+        if (type == MenuController.class) {
             return new MenuController(modelManager, sceneManager, mainController);
         }
+
+        // Попытка создать контроллер по умолчанию
         try {
             return type.getDeclaredConstructor().newInstance();
         } catch (Exception e) {

@@ -1,5 +1,6 @@
 package com.cgvsu.manager.implementations;
 
+import com.cgvsu.manager.SceneManager;
 import com.cgvsu.manager.interfaces.InputManagerImpl;
 import com.cgvsu.utils.math.Vector3f;
 import com.cgvsu.render_engine.Camera;
@@ -9,30 +10,30 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 
 public class DefaultInputManager implements InputManagerImpl {
-    private final Camera camera;
+
+    private final SceneManager sceneManager;
     private boolean middleMousePressed = false;
     private double lastMouseX, lastMouseY;
-    private float mouseSensitivity = 0.2f;
-    private float moveSpeed = 0.5f;
-    
-    private Runnable onOpenModel;
-    private Runnable onSaveModel;
-    private Runnable onShowTransformPanel;
-    private Runnable onHideTransformPanel;
-    private Runnable onRenderRequest;
 
-    public DefaultInputManager(Camera camera) {
-        this.camera = camera;
+    private float rotateSensitivity = 0.005f;   // вращение камеры
+    private float moveMouseSensitivity = 0.05f; // сдвиг мышью (Shift)
+    private float moveSpeed = 0.5f;             // WASD, Space, Shift
+
+    private Runnable onOpenModel, onSaveModel, onShowTransformPanel, onHideTransformPanel, onRenderRequest;
+
+    public DefaultInputManager(SceneManager sceneManager) {
+        this.sceneManager = sceneManager;
+    }
+
+    private Camera getCamera() {
+        return sceneManager.getActiveCamera();
     }
 
     @Override
     public void setupKeyboardHandlers(Node targetNode, Runnable onRenderRequest) {
         this.onRenderRequest = onRenderRequest;
         targetNode.setFocusTraversable(true);
-        
-        targetNode.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            handleKeyPressed(event);
-        });
+        targetNode.addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
     }
 
     @Override
@@ -44,8 +45,8 @@ public class DefaultInputManager implements InputManagerImpl {
     }
 
     @Override
-    public void setHotkeyHandlers(Runnable onOpenModel, Runnable onSaveModel, 
-                                 Runnable onShowTransformPanel, Runnable onHideTransformPanel) {
+    public void setHotkeyHandlers(Runnable onOpenModel, Runnable onSaveModel,
+                                  Runnable onShowTransformPanel, Runnable onHideTransformPanel) {
         this.onOpenModel = onOpenModel;
         this.onSaveModel = onSaveModel;
         this.onShowTransformPanel = onShowTransformPanel;
@@ -53,8 +54,12 @@ public class DefaultInputManager implements InputManagerImpl {
     }
 
     private void handleKeyPressed(KeyEvent event) {
+        Camera camera = getCamera();
+        if (camera == null) return;
+
         boolean cameraMoved = false;
-        
+
+        // горячие клавиши с Ctrl
         if (event.isControlDown()) {
             switch (event.getCode()) {
                 case O -> { if (onOpenModel != null) { onOpenModel.run(); event.consume(); return; } }
@@ -64,6 +69,7 @@ public class DefaultInputManager implements InputManagerImpl {
             }
         }
 
+        // движение камеры
         switch (event.getCode()) {
             case W -> { camera.moveForward(moveSpeed); cameraMoved = true; }
             case S -> { camera.moveBackward(moveSpeed); cameraMoved = true; }
@@ -71,16 +77,15 @@ public class DefaultInputManager implements InputManagerImpl {
             case D -> { camera.moveRight(moveSpeed); cameraMoved = true; }
             case SPACE -> { camera.moveUp(moveSpeed); cameraMoved = true; }
             case SHIFT -> { camera.moveDown(moveSpeed); cameraMoved = true; }
-            case R -> { resetCamera(); cameraMoved = true; }
+            case R -> { resetCamera(camera); cameraMoved = true; }
         }
 
-        if (cameraMoved && onRenderRequest != null) {
-            onRenderRequest.run();
-        }
+        if (cameraMoved && onRenderRequest != null) onRenderRequest.run();
     }
 
-    private void resetCamera() {
-        camera.reset(new Vector3f(0, 0, 50), new Vector3f(0, 0, 0));
+    private void resetCamera(Camera camera) {
+        camera.setPosition(new Vector3f(0, 0, 50));
+        camera.setTarget(new Vector3f(0, 0, 0));
     }
 
     private void handleMousePressed(MouseEvent event) {
@@ -100,20 +105,22 @@ public class DefaultInputManager implements InputManagerImpl {
     }
 
     private void handleMouseDragged(MouseEvent event) {
-        if (!middleMousePressed) return;
+        Camera camera = getCamera();
+        if (!middleMousePressed || camera == null) return;
 
         double deltaX = event.getSceneX() - lastMouseX;
         double deltaY = event.getSceneY() - lastMouseY;
 
+        // сдвиг, вращение, орбита
         if (event.isShiftDown()) {
-            camera.moveRight((float) (-deltaX * mouseSensitivity * 0.05f));
-            camera.moveUp((float) (deltaY * mouseSensitivity * 0.05f));
+            camera.moveRight((float) (-deltaX * moveMouseSensitivity));
+            camera.moveUp((float) (deltaY * moveMouseSensitivity));
         } else if (event.isControlDown()) {
-            camera.rotateHorizontal((float) (-deltaX * mouseSensitivity));
-            camera.rotateVertical((float) (-deltaY * mouseSensitivity));
+            camera.rotateHorizontal((float) (-deltaX * rotateSensitivity));
+            camera.rotateVertical((float) (-deltaY * rotateSensitivity));
         } else {
-            camera.orbitHorizontal((float) (-deltaX * mouseSensitivity));
-            camera.orbitVertical((float) (-deltaY * mouseSensitivity));
+            camera.orbitHorizontal((float) (-deltaX * rotateSensitivity));
+            camera.orbitVertical((float) (-deltaY * rotateSensitivity));
         }
 
         lastMouseX = event.getSceneX();
@@ -124,6 +131,9 @@ public class DefaultInputManager implements InputManagerImpl {
     }
 
     private void handleMouseScroll(javafx.scene.input.ScrollEvent event) {
+        Camera camera = getCamera();
+        if (camera == null) return;
+
         float zoomAmount = (float) (event.getDeltaY() * 0.05f);
         camera.zoom(zoomAmount);
         if (onRenderRequest != null) onRenderRequest.run();
@@ -131,12 +141,12 @@ public class DefaultInputManager implements InputManagerImpl {
     }
 
     @Override
-    public void setMouseSensitivity(float sensitivity) { 
-        this.mouseSensitivity = sensitivity; 
+    public void setMouseSensitivity(float sensitivity) {
+        this.rotateSensitivity = sensitivity;
     }
-    
+
     @Override
-    public void setMoveSpeed(float speed) { 
-        this.moveSpeed = speed; 
+    public void setMoveSpeed(float speed) {
+        this.moveSpeed = speed;
     }
 }

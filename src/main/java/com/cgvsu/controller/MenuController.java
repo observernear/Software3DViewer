@@ -8,8 +8,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.MenuBar;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.scene.image.Image;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -33,6 +35,8 @@ public class MenuController {
         this.transformController = transformController;
     }
 
+    // ------------------ МЕНЮ: МОДЕЛЬ ------------------
+
     @FXML
     private void onOpenModelMenuItemClick() {
         modelManager.openModelFile(
@@ -55,7 +59,7 @@ public class MenuController {
 
         Model toSave = choice.get().equals("Преобразованная")
                 ? sceneManager.getTransformedModel()
-                : sceneManager.getActiveModel();;
+                : currentModel;
 
         modelManager.saveModelFile(
                 menuBar.getScene().getWindow(),
@@ -65,17 +69,43 @@ public class MenuController {
         );
     }
 
+    // Добавление модели в сцену после загрузки
     private void onModelLoaded(Model model) {
         sceneManager.addModel(model);
         sceneManager.setActiveModel(model);
         mainController.requestRender();
     }
 
-
     private void onModelLoadError(String errorMessage) {
         showCustomAlert("Ошибка", errorMessage);
     }
 
+    // ------------------ МЕНЮ: ТЕКСТУРЫ ------------------
+
+    @FXML
+    private void onOpenTextureMenuItemClick() {
+        Model activeModel = sceneManager.getActiveModel();
+        if (activeModel == null) {
+            showCustomAlert("Нет модели", "Сначала откройте модель.");
+            return;
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg")
+        );
+
+        var file = fileChooser.showOpenDialog(menuBar.getScene().getWindow());
+        if (file != null) {
+            Image img = new Image(file.toURI().toString());
+            activeModel.setTexture(img);
+            mainController.requestRender();
+        }
+    }
+
+    // ------------------ УТИЛИТЫ ------------------
+
+    /** Показ модального окна с сообщением */
     private void showCustomAlert(String title, String message) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/cgvsu/fxml/AlertDialog.fxml"));
@@ -84,7 +114,6 @@ public class MenuController {
 
             controller.setHeaderText(title);
             controller.setContentText(message);
-
             controller.editButtons(false);
 
             Stage stage = new Stage();
@@ -102,6 +131,7 @@ public class MenuController {
         }
     }
 
+    /** Диалог выбора, какую модель сохранить */
     private Optional<String> showSaveModelDialog() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/cgvsu/fxml/AlertDialog.fxml"));
@@ -110,7 +140,6 @@ public class MenuController {
 
             controller.setHeaderText("Сохранение модели");
             controller.setContentText("Хотите сохранить исходную модель или преобразованную?");
-
             controller.editButtons(true);
 
             Stage stage = new Stage();
@@ -121,7 +150,6 @@ public class MenuController {
             stage.getScene().getStylesheets().add(
                     Objects.requireNonNull(getClass().getResource("/com/cgvsu/css/style.css")).toExternalForm()
             );
-
             stage.showAndWait();
 
             return Optional.ofNullable(controller.getResult());

@@ -1,28 +1,99 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefWidth="300" xmlns="http://javafx.com/javafx"
+<AnchorPane prefWidth="350"
+            xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.cgvsu.controller.ToolController"
             styleClass="background-medium">
 
-    <VBox spacing="0" alignment="TOP_CENTER"
-          AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
-          AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+    <VBox spacing="10"
+          alignment="TOP_CENTER"
+          AnchorPane.topAnchor="0"
+          AnchorPane.bottomAnchor="0"
+          AnchorPane.leftAnchor="0"
+          AnchorPane.rightAnchor="0">
 
-        <HBox spacing="0" styleClass="panel-dark">
-            <Button fx:id="transformButton" text="Изменение" onAction="#showTransformPanel"
+        <!-- Верхняя панель кнопок -->
+        <HBox spacing="8"
+              styleClass="panel-dark">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+
+            <Button fx:id="transformButton"
+                    text="Изменение"
+                    onAction="#showTransformPanel"
                     styleClass="button-primary"
-                    style="-fx-pref-width: 125; -fx-pref-height: 40;"/>
-            <Button fx:id="deleteButton" text="Удаление" onAction="#showDeletionPanel"
+                    style="-fx-pref-width: 120; -fx-pref-height: 40;"/>
+
+            <Button fx:id="deleteButton"
+                    text="Удаление"
+                    onAction="#showDeletionPanel"
                     styleClass="button-secondary"
-                    style="-fx-pref-width: 125; -fx-pref-height: 40;"/>
-            <Button fx:id="modelsButton" text="Модели" onAction="#showModelsPanel"
+                    style="-fx-pref-width: 120; -fx-pref-height: 40;"/>
+
+            <Button fx:id="modelsButton"
+                    text="Модели"
+                    onAction="#showModelsPanel"
                     styleClass="button-secondary"
-                    style="-fx-pref-width: 125; -fx-pref-height: 40;"/>
+                    style="-fx-pref-width: 120; -fx-pref-height: 40;"/>
         </HBox>
 
-        <StackPane fx:id="contentPane" VBox.vgrow="ALWAYS"/>
+        <!-- Панель управления камерами -->
+        <HBox spacing="10" alignment="CENTER_LEFT"
+              style="-fx-background-color: #2c2c2c; -fx-padding: 10; -fx-background-radius: 8;">
+
+            <ComboBox fx:id="cameraComboBox" prefWidth="200"
+                      style="-fx-background-color: #3a3a3a; -fx-text-fill: lightgray; -fx-border-color: #555555; -fx-border-radius: 5;"/>
+
+            <Button fx:id="addCameraButton"
+                    text="Добавить"
+                    style="-fx-background-color: #3a7bd5; -fx-text-fill: white; -fx-background-radius: 6;
+                   -fx-pref-width: 170; -fx-pref-height: 36; -fx-padding: 0 10 0 10;"/>
+
+            <Button fx:id="removeCameraButton"
+                    text="Удалить"
+                    style="-fx-background-color: #d9534f; -fx-text-fill: white; -fx-background-radius: 6;
+                   -fx-pref-width: 170; -fx-pref-height: 36; -fx-padding: 0 10 0 10;"/>
+        </HBox>
+
+
+
+        <!-- Контейнер для сменяемых панелей -->
+        <StackPane fx:id="contentPane"
+                   VBox.vgrow="ALWAYS"
+                   styleClass="panel-content"/>
+
+        <!-- Панель режимов рендера (внизу) -->
+        <VBox spacing="8"
+              alignment="BOTTOM_LEFT"
+              AnchorPane.bottomAnchor="0"
+              AnchorPane.rightAnchor="0"
+              style=" -fx-padding: 10; -fx-background-radius: 8;">
+
+            <Label text="Режимы отображения"
+                   style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: lightgray;"/>
+
+            <CheckBox fx:id="wireframeCheckBox"
+                      text="Рисовать полигональную сетку"
+                      style="-fx-text-fill: lightgray;"/>
+
+            <CheckBox fx:id="textureCheckBox"
+                      text="Использовать текстуру"
+                      style="-fx-text-fill: lightgray;"/>
+
+            <CheckBox fx:id="lightingCheckBox"
+                      text="Использовать освещение"
+                      style="-fx-text-fill: lightgray;"/>
+
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="Базовый цвет:" style="-fx-text-fill: lightgray;"/>
+                <ColorPicker fx:id="baseColorPicker"/>
+            </HBox>
+
+        </VBox>
     </VBox>
 </AnchorPane>

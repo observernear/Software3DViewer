@@ -7,15 +7,19 @@
          fx:id="menuBar"
          fx:controller="com.cgvsu.controller.MenuController">
     <Menu text="Файл">
-        <MenuItem text="Загрузить" onAction="#onOpenModelMenuItemClick">
+        <MenuItem text="Загрузить модель" onAction="#onOpenModelMenuItemClick">
             <accelerator>
                 <KeyCodeCombination alt="UP" control="DOWN" meta="UP" shift="UP" shortcut="UP" code="O"/>
             </accelerator>
         </MenuItem>
+
+        <MenuItem text="Загрузить текстуру" onAction="#onOpenTextureMenuItemClick"/>
+
         <MenuItem text="Сохранить" onAction="#onSaveModelMenuItemClick">
             <accelerator>
                 <KeyCodeCombination alt="UP" control="DOWN" meta="UP" shift="UP" shortcut="UP" code="S"/>
             </accelerator>
         </MenuItem>
     </Menu>
+
 </MenuBar>

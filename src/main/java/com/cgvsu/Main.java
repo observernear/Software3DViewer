@@ -16,7 +16,7 @@ public class Main extends Application {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/cgvsu/fxml/Main.fxml"));
         Parent root = loader.load();
 
-        Scene scene = new Scene(root, 1200, 800);
+        Scene scene = new Scene(root, 1200, 900);
 
         String cssPath = "/com/cgvsu/css/style.css";
         try {

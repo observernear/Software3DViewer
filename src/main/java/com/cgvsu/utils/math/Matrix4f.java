@@ -181,4 +181,11 @@ public class Matrix4f extends AbstractMatrix<Matrix4f, Vector4f> {
         }
         return sb.toString();
     }
+
+    public Vector3f multiply(Vector3f v) {
+        Vector4f v4 = new Vector4f(v.getX(), v.getY(), v.getZ(), 1.0f);
+        Vector4f res = this.multiply(v4);
+        return new Vector3f(res.getX(), res.getY(), res.getZ());
+    }
+
 }

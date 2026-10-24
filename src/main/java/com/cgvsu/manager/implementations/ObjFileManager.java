@@ -2,6 +2,8 @@ package com.cgvsu.manager.implementations;
 
 import com.cgvsu.manager.interfaces.FileManagerImpl;
 import com.cgvsu.model.Model;
+import com.cgvsu.render_engine.utils.NormalCalculator;
+import com.cgvsu.render_engine.utils.Triangulator;
 import com.cgvsu.utils.objtools.ObjReader;
 import com.cgvsu.utils.objtools.ObjWriter;
 import javafx.stage.FileChooser;
@@ -21,9 +23,7 @@ public class ObjFileManager implements FileManagerImpl {
         );
         fileChooser.setTitle("Open 3D Model");
         File file = fileChooser.showOpenDialog(window);
-        if (file != null) {
-            loadModelFromFile(file, onSuccess, onError);
-        }
+        if (file != null) loadModelFromFile(file, onSuccess, onError);
     }
 
     @Override
@@ -35,15 +35,16 @@ public class ObjFileManager implements FileManagerImpl {
         fileChooser.setTitle("Save 3D Model");
         fileChooser.setInitialFileName("model.obj");
         File file = fileChooser.showSaveDialog(window);
-        if (file != null) {
-            saveModelToFile(file, model, onSuccess, onError);
-        }
+        if (file != null) saveModelToFile(file, model, onSuccess, onError);
     }
 
+    /** Чтение модели из файла и подготовка (триангуляция, нормали) */
     private void loadModelFromFile(File file, ModelLoadCallback onSuccess, ModelErrorCallback onError) {
         try {
             String fileContent = Files.readString(file.toPath());
             Model model = ObjReader.read(fileContent);
+            Triangulator.triangulate(model);      // делаем только треугольники
+            NormalCalculator.calculateNormals(model); // считаем нормали
             model.setName(file.getName());
             onSuccess.onModelLoaded(model);
         } catch (IOException exception) {
@@ -53,6 +54,7 @@ public class ObjFileManager implements FileManagerImpl {
         }
     }
 
+    /** Сохранение модели в файл */
     private void saveModelToFile(File file, Model model, ModelSaveCallback onSuccess, ModelErrorCallback onError) {
         try {
             if (!file.getName().toLowerCase().endsWith(".obj")) {
